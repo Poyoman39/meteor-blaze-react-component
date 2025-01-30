@@ -1,69 +1,72 @@
-import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
+import React, { Component, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Blaze } from 'meteor/blaze';
 import { ReactiveVar } from 'meteor/reactive-var';
 import { Template } from 'meteor/templating';
 
-class BlazeReactComponent extends Component {
+const BlazeReactComponent = ({
+  template: blazeTemplateOrTemplateName,
+  __template__,
+  ...props
+}) => {
+  const templateProps = {
+    template: __template__,
+    ...props,
+  };
 
-  componentDidMount() {
-    this.renderBlazeView();
-  }
+  const fragmentRef = useRef();
+  const blazeDataRef = useRef(new ReactiveVar(templateProps));
+  const blazeViewRef = useRef();
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.template != this.props.template) {
-      Blaze.remove(this._blazeView);
-      this.renderBlazeView();
-    }
-  }
+  const getTemplate = useCallback(() => {
+    if (typeof blazeTemplateOrTemplateName === 'string') {
+      if (!Template[blazeTemplateOrTemplateName]) throw new Error([
+        `No Template["${blazeTemplateOrTemplateName}"] exists.  If this template`,
+        'originates in your app, make sure you have the `templating`',
+        'package installed (and not, for e.g. `static-html`)',
+      ].join(' '));
 
-  renderBlazeView() {
-    this._blazeData = new ReactiveVar(_.omit(this.props, 'template'));
-
-    let template, tArg = this.props.template;
-    if (typeof tArg === 'string') {
-      template = Template[tArg];
-      if (!template)
-        throw new Error(`No Template["${tArg}"] exists.  If this template `
-          + "originates in your app, make sure you have the `templating` "
-          + "package installed (and not, for e.g. `static-html`)");
-    } else if (tArg instanceof Blaze.Template) {
-      template = tArg;
-    } else {
-        throw new Error("Invalid template= argument specified.  Expected "
-          + "the string name of an existing Template, or the template "
-          + "itself, instead got ''" + typeof tArg + ": "
-          + JSON.stringify(tArg));
+      return Template[blazeTemplateOrTemplateName];
     }
 
-    this._blazeView = Blaze.renderWithData(
+    if (blazeTemplateOrTemplateName instanceof Blaze.Template) {
+      return blazeTemplateOrTemplateName;
+    }
+
+    throw new Error([
+      'Invalid template= argument specified.  Expected',
+      'the string name of an existing Template, or the template',
+      `itself, instead got ''${typeof blazeTemplateOrTemplateName}:`,
+      JSON.stringify(blazeTemplateOrTemplateName),
+    ].join(' '));
+  }, [blazeTemplateOrTemplateName]);
+
+  // Render Blaze View;
+  useEffect(() => {
+    const template = getTemplate();
+
+    blazeViewRef.current = Blaze.renderWithData(
       template,
-      () => this._blazeData.get(),
-      ReactDOM.findDOMNode(this._blazeRef)
+      () => blazeDataRef.current.get(),
+      fragmentRef.current,
     );
-  }
 
-  shouldComponentUpdate(nextProps) {
-    // this used to be in (the now deprecated) componentWillReceiveProps
-    this._blazeData.set(_.omit(nextProps, 'template'));
+    return () => {
+      Blaze.remove(blazeViewRef.current);
+    }
 
-    // Never call render() for props except template again; Blaze will do what's necessary.
-    return nextProps.template !== this.props.template;
-  }
+    // Never render() for props except template again; Blaze will do what's necessary.
+  }, [blazeTemplateOrTemplateName])
 
-  componentWillUnmount() {
-    Blaze.remove(this._blazeView);
-  }
+  useEffect(() => {
+    blazeDataRef.current.set(templateProps);
+  }, [templateProps]);
 
-  render() {
-    return ( <span className={this.props.className || ''} ref={(c) => this._blazeRef = c} /> );
-  }
+  return <React.Fragment ref={fragmentRef} />
+};
 
-}
-
-blazeToReact = function(template) {
-  return (props) => <BlazeReactComponent {...props} template={template} />;
-}
+const blazeToReact = template => ({ templateProp, ...props }) => (
+  <BlazeReactComponent __template__={templateProp} {...props} template={template} />
+);
 
 export { blazeToReact };
 export default BlazeReactComponent;

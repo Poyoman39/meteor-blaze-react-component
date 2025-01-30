@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import { Blaze } from 'meteor/blaze';
-import { ReactiveVar } from 'meteor/reactive-var';
 
 const BlazeComponent = (props) => {
   const html = {
@@ -14,9 +12,9 @@ const BlazeComponent = (props) => {
   return ( <span dangerouslySetInnerHTML={html} /> );
 }
 
-blazeToReact = function(template) {
-  return (props) => <BlazeComponent {...props} template={template} />;
-}
+const blazeToReact =template => ({ templateProp, ...props }) => (
+  <BlazeComponent __template__={templateProp} {...props} template={template} />
+);
 
 export { blazeToReact };
 export default BlazeComponent;
