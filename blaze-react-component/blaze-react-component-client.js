@@ -1,4 +1,4 @@
-import React, { Component, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Blaze } from 'meteor/blaze';
 import { ReactiveVar } from 'meteor/reactive-var';
 import { Template } from 'meteor/templating';
@@ -19,11 +19,13 @@ const BlazeReactComponent = ({
 
   const getTemplate = useCallback(() => {
     if (typeof blazeTemplateOrTemplateName === 'string') {
-      if (!Template[blazeTemplateOrTemplateName]) throw new Error([
-        `No Template["${blazeTemplateOrTemplateName}"] exists.  If this template`,
-        'originates in your app, make sure you have the `templating`',
-        'package installed (and not, for e.g. `static-html`)',
-      ].join(' '));
+      if (!Template[blazeTemplateOrTemplateName]) {
+        throw new Error([
+          `No Template["${blazeTemplateOrTemplateName}"] exists.  If this template`,
+          'originates in your app, make sure you have the `templating`',
+          'package installed (and not, for e.g. `static-html`)',
+        ].join(' '));
+      }
 
       return Template[blazeTemplateOrTemplateName];
     }
@@ -35,7 +37,7 @@ const BlazeReactComponent = ({
     throw new Error([
       'Invalid template= argument specified.  Expected',
       'the string name of an existing Template, or the template',
-      `itself, instead got ''${typeof blazeTemplateOrTemplateName}:`,
+      `itself, instead got '${typeof blazeTemplateOrTemplateName}':`,
       JSON.stringify(blazeTemplateOrTemplateName),
     ].join(' '));
   }, [blazeTemplateOrTemplateName]);
@@ -52,16 +54,16 @@ const BlazeReactComponent = ({
 
     return () => {
       Blaze.remove(blazeViewRef.current);
-    }
+    };
 
     // Never render() for props except template again; Blaze will do what's necessary.
-  }, [blazeTemplateOrTemplateName])
+  }, [blazeTemplateOrTemplateName]);
 
   useEffect(() => {
     blazeDataRef.current.set(templateProps);
   }, [templateProps]);
 
-  return <React.Fragment ref={fragmentRef} />
+  return <React.Fragment ref={fragmentRef} />;
 };
 
 const blazeToReact = template => ({ templateProp, ...props }) => (
