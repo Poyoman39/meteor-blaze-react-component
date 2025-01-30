@@ -9,7 +9,7 @@ const BlazeComponent = ({ template, ...props }) => {
     ),
   };
 
-  return <span dangerouslySetInnerHTML={html} />;
+  return <div style={{ display: 'contents' }} dangerouslySetInnerHTML={html} />;
 };
 
 const blazeToReact = template => ({ templateProp, ...props }) => (

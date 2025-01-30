@@ -13,7 +13,7 @@ const BlazeReactComponent = ({
     ...props,
   };
 
-  const fragmentRef = useRef();
+  const containerRef = useRef();
   const blazeDataRef = useRef(new ReactiveVar(templateProps));
   const blazeViewRef = useRef();
 
@@ -49,7 +49,7 @@ const BlazeReactComponent = ({
     blazeViewRef.current = Blaze.renderWithData(
       template,
       () => blazeDataRef.current.get(),
-      fragmentRef.current,
+      containerRef.current,
     );
 
     return () => {
@@ -63,7 +63,7 @@ const BlazeReactComponent = ({
     blazeDataRef.current.set(templateProps);
   }, [templateProps]);
 
-  return <React.Fragment ref={fragmentRef} />;
+  return <div style={{ display: 'contents' }} ref={containerRef} />;
 };
 
 const blazeToReact = template => ({ templateProp, ...props }) => (
