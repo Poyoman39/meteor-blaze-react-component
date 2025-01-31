@@ -8,13 +8,12 @@ const BlazeReactComponent = ({
   __template__,
   ...props
 }) => {
-  const templateProps = {
+  const blazeData = {
     template: __template__,
     ...props,
   };
-
   const containerRef = useRef();
-  const blazeDataRef = useRef(new ReactiveVar(templateProps));
+  const reactiveBlazeDataRef = useRef(new ReactiveVar(blazeData));
   const blazeViewRef = useRef();
 
   const getTemplate = useCallback(() => {
@@ -48,7 +47,7 @@ const BlazeReactComponent = ({
 
     blazeViewRef.current = Blaze.renderWithData(
       template,
-      () => blazeDataRef.current.get(),
+      () => reactiveBlazeDataRef.current.get(),
       containerRef.current,
     );
 
@@ -60,10 +59,10 @@ const BlazeReactComponent = ({
   }, [blazeTemplateOrTemplateName]);
 
   useEffect(() => {
-    blazeDataRef.current.set(templateProps);
-  }, [templateProps]);
+    reactiveBlazeDataRef.current.set(blazeData);
+  }, [blazeData]);
 
-  return <div style={{ display: 'contents' }} ref={containerRef} />;
+  return <span style={{ display: 'contents' }} ref={containerRef} />;
 };
 
 const blazeToReact = template => ({ templateProp, ...props }) => (
